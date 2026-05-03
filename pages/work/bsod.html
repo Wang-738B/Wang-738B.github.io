@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSOD Simulator</title>
+    <style>
+        /* --- 基础重置和全局样式 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 经典的蓝屏背景色 */
+            background-color: #000080;
+            color: #FFFFFF;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden; /* 隐藏滚动条 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* --- 标题样式 --- */
+        .bsod-header {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            font-weight: normal;
+        }
+
+        /* --- 错误信息容器 --- */
+        .bsod-body {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- 主要错误代码和描述 --- */
+        .error-info {
+            margin-bottom: 2rem;
+        }
+
+        .error-code {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-description {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* --- 技术信息 (STOP Code) --- */
+        .technical-info {
+            border-top: 1px solid #FFFFFF;
+            padding-top: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 更像Windows系统字体 */
+        }
+
+        .technical-info p {
+            margin-bottom: 0.5rem;
+        }
+
+        .stop-code {
+            font-weight: bold;
+        }
+
+        /* --- 底部滚动条动画 --- */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background-color: #FFFFFF;
+            animation: scan 15s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                width: 0%;
+                opacity: 1;
+            }
+            95% {
+                width: 100%;
+                opacity: 1;
+            }
+            100% {
+                width: 100%;
+                opacity: 0;
+            }
+        }
+
+        /* --- 闪烁的下划线效果 (可选) --- */
+        .blinking-cursor::after {
+            content: '_';
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bsod-body">
+        <h1 class="bsod-header">:(</h1>
+        <div class="error-info">
+            <p class="error-code">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</p>
+            <p class="error-description"><span class="blinking-cursor">0</span>% complete</p>
+        </div>
+        <div class="technical-info">
+            <p>For more information about this issue and possible fixes, visit <a href="#" style="color: #FFFFFF; text-decoration: underline;">https://www.windows.com/stopcode</a></p>
+            <p>If you call a support person, give them this info:</p>
+            <p class="stop-code">Stop Code: CRITICAL_PROCESS_DIED</p>
+        </div>
+    </div>
+
+    <div class="progress-bar"></div>
+
+    <script>
+        // 模拟进度条数字变化
+        const progressText = document.querySelector('.error-description .blinking-cursor');
+        let progress = 0;
+
+        // 使用 setInterval 模拟进度更新
+        const interval = setInterval(() => {
+            progress += 1;
+            progressText.textContent = progress;
+            
+            // 当进度达到100%时，清除定时器
+            if (progress >= 100) {
+                clearInterval(interval);
+                progressText.textContent = '100';
+            }
+        }, 150); // 每150毫秒增加1%
+    </script>
+
+</body>
+</html>
