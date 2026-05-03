@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 视口适配：手机端不缩放，宽度适配屏幕 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的作品集 | 个人网站</title>
+    <style>
+        /* 全局样式重置：消除浏览器默认边距/内边距，统一盒模型 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* body全局样式：柔性居中，最小占满屏幕，优雅的字体和背景 */
+        body {
+            font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa; /* 浅灰背景，不刺眼 */
+            min-height: 100vh; /* 最小高度占满屏幕 */
+            display: flex; /* Flex居中，比text-align更灵活 */
+            flex-direction: column; /* 垂直排列子元素 */
+            align-items: center; /* 水平居中 */
+            padding: 40px 20px; /* 上下内边距，手机端不贴边 */
+            color: #333; /* 主文字深灰，比纯黑更柔和 */
+        }
+
+        /* 主标题样式：优化颜色和间距，加轻微字重 */
+        .page-title {
+            color: #2196F3;
+            font-size: clamp(24px, 5vw, 36px); /* 字体大小自适应 */
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* 作品集容器：网格布局，适配不同屏幕 */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+            margin-bottom: 60px;
+        }
+
+        /* 项目卡片样式：统一风格，hover有反馈 */
+        .project-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        /* 项目缩略图：固定高度，防止变形 */
+        .project-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        /* 项目内容区：内边距和文字排版 */
+        .project-content {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* 项目链接按钮：和主页风格统一 */
+        .project-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #2196F3;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .project-link:hover {
+            background-color: #1976D2;
+        }
+
+        /* 返回主页按钮：和其他按钮风格统一 */
+        .back-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2196F3;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        /* 页脚样式：和主页保持一致 */
+        .footer {
+            margin-top: auto;
+            padding: 20px 0;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面标题 -->
+    <h1 class="page-title">我的作品集</h1>
+
+    <!-- 作品集项目网格区 -->
+    <div class="portfolio-grid">
+        <!-- 项目1：示例项目，可复制扩展 -->
+        <div class="project-card">
+            <img 
+                src="https://picsum.photos/seed/project1/600/400" 
+                alt="项目1预览图" 
+                class="project-img"
+            >
+            <div class="project-content">
+                <h3 class="project-title">蓝屏模仿界面</h3>
+                <p class="project-desc">通过HTML搭建的模仿Windows10/11的蓝屏界面</p>
+                <a href="https://github.com/Wang-738B/Wang-738B.github.io" class="project-link">查看源码</a>
+            </div>
+        </div>
+
+        <!-- 项目2：示例项目 -->
+        <div class="project-card">
+            <img 
+                src="https://picsum.photos/seed/project2/600/400" 
+                alt="项目2预览图" 
+                class="project-img"
+            >
+            <div class="project-content">
+                <h3 class="project-title">常用工具下载页</h3>
+                <p class="project-desc">一个静态工具下载页面，整理了常用软件的官方下载链接，无广告无捆绑，方便自己和朋友使用。</p>
+                <a href="downloads.html" class="project-link">查看页面</a>
+            </div>
+        </div>
+
+        <!-- 项目3：示例项目 -->
+        <div class="project-card">
+            <img 
+                src="https://picsum.photos/seed/project3/600/400" 
+                alt="项目3预览图" 
+                class="project-img"
+            >
+            <div class="project-content">
+                <h3 class="project-title">待添加项目</h3>
+                <p class="project-desc">后续可以在这里添加你的编程项目、设计作品或其他作品集内容。</p>
+                <a href="#" class="project-link">敬请期待</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回主页按钮 -->
+    <a href="../index.html" class="back-btn">← 返回主页</a>
+
+    <!-- 页脚区：和主页保持一致 -->
+    <footer class="footer">
+        © 2026 我的个人网站 | 基于GitHub Pages搭建
+    </footer>
+</body>
+</html>
