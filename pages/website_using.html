@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常用网站收藏 | 个人网站</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 继承主页的全局样式 */
+        body {
+            font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        /* 页面标题 */
+        .page-title {
+            color: #2196F3;
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 60px;
+        }
+
+        /* 分类标题 */
+        .category-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 30px 0 20px 10px;
+            color: #333;
+        }
+
+        /* 第一个分类标题取消上边距 */
+        .category-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* 网站链接按钮 */
+        .site-link {
+            display: block;
+            padding: 16px 20px;
+            margin-bottom: 15px;
+            background-color: #e0e8f6;
+            border: 2px solid #4a7bcd;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        /* hover效果，和主页按钮风格统一 */
+        .site-link:hover {
+            background-color: #4a7bcd;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 123, 205, 0.3);
+        }
+
+        /* 返回主页按钮 */
+        .back-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2196F3;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        /* 页脚样式 */
+        .footer {
+            margin-top: auto;
+            padding: 20px 0;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面标题 -->
+    <h1 class="page-title">常用网站收藏</h1>
+
+    <!-- 网站收藏主容器 -->
+    <div class="container">
+        <!-- 学习和程序分类 -->
+        <h2 class="category-title">学习和程序</h2>
+        <a href="https://github.com" class="site-link" target="_blank">GitHub - 代码托管平台</a>
+        <a href="https://www.bilibili.com" class="site-link" target="_blank">哔哩哔哩 - 学习视频平台</a>
+        <a href="https://www.csdn.net" class="site-link" target="_blank">CSDN - 技术博客社区</a>
+        <a href="https://leetcode.cn" class="site-link" target="_blank">LeetCode - 算法刷题平台</a>
+
+        <!-- 休闲和娱乐分类 -->
+        <h2 class="category-title">休闲和娱乐</h2>
+        <a href="https://www.bilibili.com" class="site-link" target="_blank">哔哩哔哩 - 视频娱乐平台</a>
+        <a href="https://www.zhihu.com" class="site-link" target="_blank">知乎 - 问答社区</a>
+
+        <!-- 可以继续添加更多分类 -->
+        <h2 class="category-title">工具和效率</h2>
+        <a href="https://www.canva.cn" class="site-link" target="_blank">Canva - 在线设计工具</a>
+        <a href="https://www.baidu.com" class="site-link" target="_blank">百度 - 搜索引擎</a>
+    </div>
+
+    <!-- 返回主页按钮 -->
+    <a href="../index.html" class="back-btn">← 返回主页</a>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        © 2026 我的个人网站 | 基于GitHub Pages搭建
+    </footer>
+</body>
+</html>
