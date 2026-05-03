@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/image/icon.png" type="image/x-icon">
     <title>我的个人网站</title>
+    <!-- 引入免费商用瘦金体（站酷高端黑/瘦金体，这里用的是无版权的在线CDN） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+    @font-face {
+      font-family: "ShouJin";
+      src: url("https://cdn.jsdelivr.net/gh/xxx/xxx/shoujin.ttf") format("truetype");
+      src: url("https://cdn.jsdelivr.net/npm/zhfont@1.0.0/fonts/songti.ttf") format("truetype");
+    }
+    </style>
     <style>
         /* 全局样式重置：消除浏览器默认边距/内边距，统一盒模型 */
         * {
@@ -39,9 +48,10 @@
         /* 主标题样式：优化颜色和间距，加轻微字重 */
         .main-title {
             color: #2196F3;
-            font-size: clamp(24px, 5vw, 36px); /* 字体大小自适应 */
-            font-weight: 600;
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: normal; /* 瘦金体本身偏细，不要加粗体 */
             margin-bottom: 20px;
+            font-family: "ZCOOL KuaiLe", "KaiTi", serif;
         }
 
         /* 内容容器：统一文字间距，居中对齐 */
