@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三体物理模拟器</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#0F172A',
+            light: '#F1F5F9',
+            danger: '#EF4444',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .text-glow {
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      }
+      .bg-space {
+        background-color: #030712;
+        background-image: 
+          radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.2) 2%, transparent 0%), 
+          radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.2) 2%, transparent 0%);
+        background-size: 100px 100px;
+      }
+      .border-glow {
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+      }
+      .slider-thumb::-webkit-slider-thumb {
+        @apply appearance-none w-4 h-4 rounded-full bg-primary border-2 border-white cursor-pointer;
+      }
+      .slider-thumb::-moz-range-thumb {
+        @apply appearance-none w-4 h-4 rounded-full bg-primary border-2 border-white cursor-pointer;
+      }
+    }
+  </style>
+</head>
+<body class="bg-space text-light min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-dark/80 backdrop-blur-sm border-b border-primary/30 sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-rocket text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold text-glow">三体物理模拟器</h1>
+      </div>
+      <nav>
+        <ul class="flex space-x-6">
+          <li>
+            <select id="preset-scenarios" class="bg-dark/50 border border-primary/50 rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="default">默认场景</option>
+              <option value="sun-earth-moon">日地月系统</option>
+              <option value="figure-eight">8字形轨道</option>
+              <option value="lagrange">拉格朗日点</option>
+              <option value="restricted">限制性三体</option>
+              <option value="random">随机初始条件</option>
+            </select>
+          </li>
+          <li>
+            <button id="help-btn" class="bg-primary/20 hover:bg-primary/30 border border-primary/50 rounded px-3 py-1 text-sm transition-colors">
+              <i class="fa fa-question-circle mr-1"></i> 帮助
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+    <!-- 左侧模拟区域 -->
+    <section class="lg:w-3/4 bg-dark/50 rounded-lg border border-primary/30 overflow-hidden">
+      <div class="relative">
+        <canvas id="simulation-canvas" class="w-full h-[600px]"></canvas>
+        <div id="simulation-overlay" class="absolute top-0 left-0 w-full h-full pointer-events-none flex items-center justify-center">
+          <div id="paused-indicator" class="hidden bg-dark/80 backdrop-blur-sm text-light px-4 py-2 rounded-lg border border-primary/50">
+            <span class="text-xl font-bold">已暂停</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 模拟控制按钮 -->
+      <div class="bg-dark/80 backdrop-blur-sm border-t border-primary/30 p-3 flex justify-center space-x-4">
+        <button id="play-pause-btn" class="bg-primary hover:bg-primary/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors">
+          <i class="fa fa-play"></i>
+        </button>
+        <button id="reset-btn" class="bg-dark hover:bg-dark/80 border border-primary/50 text-light rounded-full w-10 h-10 flex items-center justify-center transition-colors">
+          <i class="fa fa-refresh"></i>
+        </button>
+        <button id="export-data-btn" class="bg-dark hover:bg-dark/80 border border-primary/50 text-light rounded-full w-10 h-10 flex items-center justify-center transition-colors" title="导出数据">
+          <i class="fa fa-download"></i>
+        </button>
+        <button id="toggle-trails-btn" class="bg-dark hover:bg-dark/80 border border-primary/50 text-light rounded-full w-10 h-10 flex items-center justify-center transition-colors" title="显示/隐藏轨迹">
+          <i class="fa fa-paint-brush"></i>
+        </button>
+        <button id="toggle-info-btn" class="bg-dark hover:bg-dark/80 border border-primary/50 text-light rounded-full w-10 h-10 flex items-center justify-center transition-colors" title="显示/隐藏信息">
+          <i class="fa fa-info-circle"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 右侧控制面板 -->
+    <section class="lg:w-1/4 bg-dark/50 rounded-lg border border-primary/30 p-4">
+      <h2 class="text-lg font-semibold mb-4 flex items-center">
+        <i class="fa fa-sliders text-primary mr-2"></i>
+        参数控制
+      </h2>
+      
+      <!-- 物理参数 -->
+      <div class="mb-6">
+        <h3 class="text-sm uppercase tracking-wider text-primary/70 mb-3">物理参数</h3>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between mb-1">
+              <label for="gravity-constant" class="text-sm">引力常数 (G)</label>
+              <span id="gravity-value" class="text-sm font-mono">1.00</span>
+            </div>
+            <input type="range" id="gravity-constant" min="0.1" max="2" step="0.01" value="1" 
+                  class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+          </div>
+          
+          <div>
+            <div class="flex justify-between mb-1">
+              <label for="time-step" class="text-sm">时间步长</label>
+              <span id="time-step-value" class="text-sm font-mono">0.01</span>
+            </div>
+            <input type="range" id="time-step" min="0.001" max="0.05" step="0.001" value="0.01" 
+                  class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+          </div>
+          
+          <div>
+            <div class="flex justify-between mb-1">
+              <label for="softening-factor" class="text-sm">软化因子</label>
+              <span id="softening-value" class="text-sm font-mono">0.01</span>
+            </div>
+            <input type="range" id="softening-factor" min="0" max="0.1" step="0.001" value="0.01" 
+                  class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+          </div>
+        </div>
+      </div>
+      
+      <!-- 天体参数 -->
+      <div class="mb-6">
+        <h3 class="text-sm uppercase tracking-wider text-primary/70 mb-3">天体参数</h3>
+        
+        <!-- 天体选择器 -->
+        <div class="mb-4">
+          <select id="body-selector" class="w-full bg-dark/50 border border-primary/50 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+            <option value="0">天体 1 (蓝色)</option>
+            <option value="1">天体 2 (绿色)</option>
+            <option value="2">天体 3 (橙色)</option>
+          </select>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between mb-1">
+              <label for="body-mass" class="text-sm">质量</label>
+              <span id="mass-value" class="text-sm font-mono">1.00</span>
+            </div>
+            <input type="range" id="body-mass" min="0.1" max="5" step="0.1" value="1" 
+                  class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <label for="body-x" class="text-sm">X 位置</label>
+                <span id="x-value" class="text-sm font-mono">0.00</span>
+              </div>
+              <input type="range" id="body-x" min="-1" max="1" step="0.01" value="0" 
+                    class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+            </div>
+            
+            <div>
+              <div class="flex justify-between mb-1">
+                <label for="body-y" class="text-sm">Y 位置</label>
+                <span id="y-value" class="text-sm font-mono">0.00</span>
+              </div>
+              <input type="range" id="body-y" min="-1" max="1" step="0.01" value="0" 
+                    class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <label for="body-vx" class="text-sm">X 速度</label>
+                <span id="vx-value" class="text-sm font-mono">0.00</span>
+              </div>
+              <input type="range" id="body-vx" min="-1" max="1" step="0.01" value="0" 
+                    class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+            </div>
+            
+            <div>
+              <div class="flex justify-between mb-1">
+                <label for="body-vy" class="text-sm">Y 速度</label>
+                <span id="vy-value" class="text-sm font-mono">0.00</span>
+              </div>
+              <input type="range" id="body-vy" min="-1" max="1" step="0.01" value="0" 
+                    class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 显示选项 -->
+      <div>
+        <h3 class="text-sm uppercase tracking-wider text-primary/70 mb-3">显示选项</h3>
+        
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label for="trail-length" class="text-sm">轨迹长度</label>
+            <span id="trail-length-value" class="text-sm font-mono">1000</span>
+          </div>
+          <input type="range" id="trail-length" min="100" max="5000" step="100" value="1000" 
+                class="w-full h-2 bg-dark rounded-lg appearance-none cursor-pointer slider-thumb">
+          
+          <div class="flex items-center justify-between mt-4">
+            <label for="show-velocities" class="text-sm flex items-center">
+              <input type="checkbox" id="show-velocities" class="mr-2 accent-primary">
+              显示速度矢量
+            </label>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <label for="show-forces" class="text-sm flex items-center">
+              <input type="checkbox" id="show-forces" class="mr-2 accent-primary">
+              显示引力矢量
+            </label>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <label for="show-center-of-mass" class="text-sm flex items-center">
+              <input type="checkbox" id="show-center-of-mass" class="mr-2 accent-primary">
+              显示质心
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部信息 -->
+  <footer class="bg-dark/80 backdrop-blur-sm border-t border-primary/30 py-3">
+    <div class="container mx-auto px-4 text-center text-sm text-primary/70">
+      <p>三体物理模拟器 &copy; 2026 | 基于HTML5 Canvas和JavaScript</p>
+    </div>
+  </footer>
+
+  <!-- 帮助模态框 -->
+  <div id="help-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-dark border border-primary/50 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-glow">三体物理模拟器使用指南</h2>
+          <button id="close-help-btn" class="text-primary hover:text-primary/80">
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-2">基本操作</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><strong>播放/暂停</strong>：点击中央的播放/暂停按钮控制模拟</li>
+              <li><strong>重置</strong>：点击重置按钮恢复当前场景的初始状态</li>
+              <li><strong>场景选择</strong>：从顶部下拉菜单选择预设场景</li>
+              <li><strong>导出数据</strong>：点击下载按钮导出当前模拟数据</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-2">参数调整</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><strong>物理参数</strong>：调整引力常数、时间步长和软化因子</li>
+              <li><strong>天体参数</strong>：选择天体后调整其质量、位置和速度</li>
+              <li><strong>显示选项</strong>：控制轨迹长度和各种矢量的显示</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-2">交互方式</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><strong>拖拽</strong>：直接拖拽天体改变其位置</li>
+              <li><strong>缩放</strong>：使用鼠标滚轮缩放视图</li>
+              <li><strong>平移</strong>：按住Alt键并拖拽可平移视图</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-2">关于三体问题</h3>
+            <p class="text-sm">
+              三体问题是指三个质点在万有引力作用下的运动问题。由于其非线性特性，三体问题在一般情况下没有解析解，
+              表现出混沌行为。本模拟器使用Runge-Kutta数值积分方法求解三体运动方程，展示了三体系统的复杂动力学行为。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 向量运算工具 =====
+    class Vector2D {
+      constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+      }
+      
+      // 向量加法
+      add(v) {
+        return new Vector2D(this.x + v.x, this.y + v.y);
+      }
+      
+      // 向量减法
+      subtract(v) {
+        return new Vector2D(this.x - v.x, this.y - v.y);
+      }
+      
+      // 向量数乘
+      multiply(scalar) {
+        return new Vector2D(this.x * scalar, this.y * scalar);
+      }
+      
+      // 向量点积
+      dot(v) {
+        return this.x * v.x + this.y * v.y;
+      }
+      
+      // 向量叉积（返回标量）
+      cross(v) {
+        return this.x * v.y - this.y * v.x;
+      }
+      
+      // 向量长度的平方
+      lengthSquared() {
+        return this.x * this.x + this.y * this.y;
+      }
+      
+      // 向量长度
+      length() {
+        return Math.sqrt(this.lengthSquared());
+      }
+      
+      // 单位向量
+      normalize() {
+        const len = this.length();
+        if (len === 0) return new Vector2D(0, 0);
+        return new Vector2D(this.x / len, this.y / len);
+      }
+      
+      // 向量距离
+      distanceTo(v) {
+        return this.subtract(v).length();
+      }
+      
+      // 复制向量
+      clone() {
+        return new Vector2D(this.x, this.y);
+      }
+    }
+
+    // ===== 天体类 =====
+    class CelestialBody {
+      constructor(mass = 1, x = 0, y = 0, vx = 0, vy = 0, color = '#ffffff') {
+        this.mass = mass;
+        this.position = new Vector2D(x, y);
+        this.velocity = new Vector2D(vx, vy);
+        this.acceleration = new Vector2D(0, 0);
+        this.color = color;
+        this.radius = Math.pow(mass, 1/3) * 10; // 质量与半径的关系
+        this.trail = []; // 轨迹点
+      }
+      
+      // 更新位置
+      update(dt) {
+        // 使用速度更新位置
+        this.position = this.position.add(this.velocity.multiply(dt));
+        
+        // 使用加速度更新速度
+        this.velocity = this.velocity.add(this.acceleration.multiply(dt));
+        
+        // 记录轨迹点
+        this.trail.push(this.position.clone());
+        
+        // 限制轨迹长度
+        if (this.trail.length > trailLength) {
+          this.trail.shift();
+        }
+        
+        // 重置加速度（在下一帧重新计算）
+        this.acceleration = new Vector2D(0, 0);
+      }
+      
+      // 施加力
+      applyForce(force) {
+        // F = ma, 所以 a = F/m
+        this.acceleration = this.acceleration.add(force.multiply(1 / this.mass));
+      }
+      
+      // 绘制天体
+      draw(ctx, scale = 1, offset = new Vector2D(0, 0)) {
+        const screenPos = this.position.multiply(scale).add(offset);
+        
+        // 绘制轨迹
+        if (showTrails && this.trail.length > 1) {
+          ctx.beginPath();
+          ctx.strokeStyle = this.color + '80'; // 半透明
+          ctx.lineWidth = 1;
+          
+          const startIdx = Math.max(0, this.trail.length - trailLength);
+          const firstPoint = this.trail[startIdx].multiply(scale).add(offset);
+          ctx.moveTo(firstPoint.x, firstPoint.y);
+          
+          for (let i = startIdx + 1; i < this.trail.length; i++) {
+            const point = this.trail[i].multiply(scale).add(offset);
+            ctx.lineTo(point.x, point.y);
+          }
+          
+          ctx.stroke();
+        }
+        
+        // 绘制天体
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        ctx.arc(screenPos.x, screenPos.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 添加发光效果
+        ctx.beginPath();
+        const gradient = ctx.createRadialGradient(
+          screenPos.x, screenPos.y, this.radius,
+          screenPos.x, screenPos.y, this.radius * 2
+        );
+        gradient.addColorStop(0, this.color + '40');
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.arc(screenPos.x, screenPos.y, this.radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 绘制速度矢量
+        if (showVelocities) {
+          const velocityScale = 50;
+          const endPos = screenPos.add(this.velocity.multiply(velocityScale));
+          
+          ctx.beginPath();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.moveTo(screenPos.x, screenPos.y);
+          ctx.lineTo(endPos.x, endPos.y);
+          ctx.stroke();
+          
+          // 绘制箭头
+          const arrowSize = 5;
+          const angle = Math.atan2(this.velocity.y, this.velocity.x);
+          ctx.beginPath();
+          ctx.fillStyle = '#ffffff';
+          ctx.moveTo(endPos.x, endPos.y);
+          ctx.lineTo(
+            endPos.x - arrowSize * Math.cos(angle - Math.PI / 6),
+            endPos.y - arrowSize * Math.sin(angle - Math.PI / 6)
+          );
+          ctx.lineTo(
+            endPos.x - arrowSize * Math.cos(angle + Math.PI / 6),
+            endPos.y - arrowSize * Math.sin(angle + Math.PI / 6)
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+
+    // ===== 三体系统类 =====
+    class ThreeBodySystem {
+      constructor() {
+        this.bodies = [];
+        this.G = 1; // 引力常数
+        this.softening = 0.01; // 软化因子，避免距离过小时的数值不稳定
+        this.time = 0;
+        this.timeStep = 0.01;
+        this.centerOfMass = new Vector2D(0, 0);
+      }
+      
+      // 添加天体
+      addBody(body) {
+        this.bodies.push(body);
+      }
+      
+      // 计算引力
+      calculateGravitationalForce(body1, body2) {
+        // 计算两个天体之间的距离
+        const r = body2.position.subtract(body1.position);
+        const distanceSquared = r.lengthSquared() + this.softening * this.softening;
+        const distance = Math.sqrt(distanceSquared);
+        
+        // 计算引力大小 F = G * m1 * m2 / r^2
+        const forceMagnitude = this.G * body1.mass * body2.mass / distanceSquared;
+        
+        // 计算引力方向（单位向量）
+        const forceDirection = r.normalize();
+        
+        // 计算引力向量
+        return forceDirection.multiply(forceMagnitude);
+      }
+      
+      // 计算系统总能量
+      calculateTotalEnergy() {
+        let kineticEnergy = 0;
+        let potentialEnergy = 0;
+        
+        // 计算动能
+        for (const body of this.bodies) {
+          kineticEnergy += 0.5 * body.mass * body.velocity.lengthSquared();
+        }
+        
+        // 计算势能
+        for (let i = 0; i < this.bodies.length; i++) {
+          for (let j = i + 1; j < this.bodies.length; j++) {
+            const body1 = this.bodies[i];
+            const body2 = this.bodies[j];
+            const distance = body1.position.distanceTo(body2.position);
+            potentialEnergy -= this.G * body1.mass * body2.mass / distance;
+          }
+        }
+        
+        return kineticEnergy + potentialEnergy;
+      }
+      
+      // 计算系统角动量
+      calculateAngularMomentum() {
+        let angularMomentum = new Vector2D(0, 0);
+        
+        for (const body of this.bodies) {
+          // L = r × p = r × (m * v)
+          const angularMomentumVector = body.position.cross(body.velocity) * body.mass;
+          angularMomentum = angularMomentum.add(new Vector2D(0, angularMomentumVector));
+        }
+        
+        return angularMomentum;
+      }
+      
+      // 计算质心
+      calculateCenterOfMass() {
+        let totalMass = 0;
+        let centerOfMass = new Vector2D(0, 0);
+        
+        for (const body of this.bodies) {
+          totalMass += body.mass;
+          centerOfMass = centerOfMass.add(body.position.multiply(body.mass));
+        }
+        
+        if (totalMass > 0) {
+          centerOfMass = centerOfMass.multiply(1 / totalMass);
+        }
+        
+        this.centerOfMass = centerOfMass;
+        return centerOfMass;
+      }
+      
+      // 更新系统状态
+      update() {
+        // 计算每个天体受到的引力
+        for (let i = 0; i < this.bodies.length; i++) {
+          for (let j = i + 1; j < this.bodies.length; j++) {
+            const body1 = this.bodies[i];
+            const body2 = this.bodies[j];
+            
+            // 计算body1受到的引力
+            const force1 = this.calculateGravitationalForce(body1, body2);
+            body1.applyForce(force1);
+            
+            // 计算body2受到的引力（牛顿第三定律）
+            const force2 = force1.multiply(-1);
+            body2.applyForce(force2);
+          }
+        }
+        
+        // 更新每个天体的位置和速度
+        for (const body of this.bodies) {
+          body.update(this.timeStep);
+        }
+        
+        // 更新时间
+        this.time += this.timeStep;
+        
+        // 计算质心
+        this.calculateCenterOfMass();
+      }
+      
+      // 绘制系统
+      draw(ctx, scale = 1, offset = new Vector2D(0, 0)) {
+        // 绘制质心
+        if (showCenterOfMass) {
+          const comPos = this.centerOfMass.multiply(scale).add(offset);
+          ctx.beginPath();
+          ctx.fillStyle = '#ffffff';
+          ctx.arc(comPos.x, comPos.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // 绘制每个天体
+        for (const body of this.bodies) {
+          body.draw(ctx, scale, offset);
+        }
+        
+        // 绘制引力矢量
+        if (showForces) {
+          for (const body of this.bodies) {
+            const forceScale = 0.01;
+            const screenPos = body.position.multiply(scale).add(offset);
+            const force = body.acceleration.multiply(body.mass).multiply(forceScale);
+            const endPos = screenPos.add(force);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+            ctx.moveTo(screenPos.x, screenPos.y);
+            ctx.lineTo(endPos.x, endPos.y);
+            ctx.stroke();
+            
+            // 绘制箭头
+            const arrowSize = 5;
+            const angle = Math.atan2(force.y, force.x);
+            ctx.beginPath();
+            ctx.fillStyle = '#ff0000';
+            ctx.moveTo(endPos.x, endPos.y);
+            ctx.lineTo(
+              endPos.x - arrowSize * Math.cos(angle - Math.PI / 6),
+              endPos.y - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+              endPos.x - arrowSize * Math.cos(angle + Math.PI / 6),
+              endPos.y - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+      }
+      
+      // 重置系统
+      reset() {
+        this.time = 0;
+        for (const body of this.bodies) {
+          body.trail = [];
+          body.acceleration = new Vector2D(0, 0);
+        }
+      }
+      
+      // 导出数据
+      exportData() {
+        const data = {
+          time: this.time,
+          bodies: this.bodies.map(body => ({
+            mass: body.mass,
+            position: { x: body.position.x, y: body.position.y },
+            velocity: { x: body.velocity.x, y: body.velocity.y },
+            trail: body.trail.map(point => ({ x: point.x, y: point.y }))
+          })),
+          totalEnergy: this.calculateTotalEnergy(),
+          angularMomentum: { 
+            x: this.calculateAngularMomentum().x,
+            y: this.calculateAngularMomentum().y
+          }
+        };
+        
+        return JSON.stringify(data, null, 2);
+      }
+    }
+
+    // ===== 预设场景 =====
+    const presetScenarios = {
+      default: {
+        name: "默认场景",
+        setup: function(system) {
+          system.bodies = [
+            new CelestialBody(1, -0.5, 0, 0, -0.5, '#3B82F6'),   // 蓝色天体
+            new CelestialBody(1, 0.5, 0, 0, 0.5, '#10B981'),    // 绿色天体
+            new CelestialBody(1, 0, 0.5, 0.5, 0, '#F59E0B')     // 橙色天体
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.01;
+        }
+      },
+      'sun-earth-moon': {
+        name: "日地月系统",
+        setup: function(system) {
+          system.bodies = [
+            new CelestialBody(5, 0, 0, 0, 0, '#F59E0B'),           // 太阳
+            new CelestialBody(1, 1, 0, 0, 1.2, '#3B82F6'),        // 地球
+            new CelestialBody(0.1, 1.1, 0, 0, 1.5, '#9CA3AF')     // 月球
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.005;
+        }
+      },
+      'figure-eight': {
+        name: "8字形轨道",
+        setup: function(system) {
+          // 特殊的8字形轨道初始条件
+          const a = 0.9700436;
+          const b = -0.24308753;
+          const c = 0.466203685;
+          
+          system.bodies = [
+            new CelestialBody(1, a, b, c, c, '#3B82F6'),
+            new CelestialBody(1, b, a, c, -c, '#10B981'),
+            new CelestialBody(1, -a-b, -a-b, c, c, '#F59E0B')
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.01;
+        }
+      },
+      lagrange: {
+        name: "拉格朗日点",
+        setup: function(system) {
+          system.bodies = [
+            new CelestialBody(3, -0.5, 0, 0, -0.3, '#F59E0B'),   // 大质量天体1
+            new CelestialBody(3, 0.5, 0, 0, 0.3, '#3B82F6'),    // 大质量天体2
+            new CelestialBody(0.1, 0, 1, 0.5, 0, '#10B981')     // 小质量天体
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.005;
+        }
+      },
+      restricted: {
+        name: "限制性三体",
+        setup: function(system) {
+          system.bodies = [
+            new CelestialBody(2, -0.5, 0, 0, -0.4, '#3B82F6'),   // 大质量天体1
+            new CelestialBody(2, 0.5, 0, 0, 0.4, '#10B981'),    // 大质量天体2
+            new CelestialBody(0.01, 0, 1, 0.7, 0, '#F59E0B')    // 小质量天体
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.005;
+        }
+      },
+      random: {
+        name: "随机初始条件",
+        setup: function(system) {
+          system.bodies = [
+            new CelestialBody(
+              Math.random() * 2 + 0.5,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              '#3B82F6'
+            ),
+            new CelestialBody(
+              Math.random() * 2 + 0.5,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              '#10B981'
+            ),
+            new CelestialBody(
+              Math.random() * 2 + 0.5,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2,
+              '#F59E0B'
+            )
+          ];
+          system.G = 1;
+          system.softening = 0.01;
+          system.timeStep = 0.01;
+        }
+      }
+    };
+
+    // ===== 渲染器类 =====
+    class Renderer {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        
+        // 视图参数
+        this.scale = 200; // 缩放比例
+        this.offset = new Vector2D(this.canvas.width / 2, this.canvas.height / 2); // 偏移量
+        this.isDragging = false;
+        this.lastMousePos = new Vector2D(0, 0);
+        this.showInfo = true;
+        
+        // 绑定事件
+        this.bindEvents();
+      }
+      
+      // 调整画布大小
+      resize() {
+        const container = this.canvas.parentElement;
+        this.canvas.width = container.clientWidth;
+        this.canvas.height = container.clientHeight;
+        this.offset = new Vector2D(this.canvas.width / 2, this.canvas.height / 2);
+      }
+      
+      // 绑定事件
+      bindEvents() {
+        // 窗口大小改变事件
+        window.addEventListener('resize', () => this.resize());
+        
+        // 鼠标滚轮缩放事件
+        this.canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+          this.scale *= zoomFactor;
+        });
+        
+        // 鼠标拖拽事件
+        this.canvas.addEventListener('mousedown', (e) => {
+          // 检查是否点击了天体
+          const mousePos = this.getMousePos(e);
+          const worldPos = this.screenToWorld(mousePos);
+          
+          for (let i = 0; i < system.bodies.length; i++) {
+            const body = system.bodies[i];
+            if (body.position.distanceTo(worldPos) < body.radius / this.scale) {
+              // 选中天体
+              document.getElementById('body-selector').value = i;
+              updateBodyControls();
+              return;
+            }
+          }
+          
+          // 如果没有点击天体，开始拖拽视图
+          if (e.altKey) {
+            this.isDragging = true;
+            this.lastMousePos = mousePos;
+          }
+        });
+        
+        this.canvas.addEventListener('mousemove', (e) => {
+          if (this.isDragging) {
+            const mousePos = this.getMousePos(e);
+            const delta = mousePos.subtract(this.lastMousePos);
+            this.offset = this.offset.add(delta);
+            this.lastMousePos = mousePos;
+          }
+        });
+        
+        this.canvas.addEventListener('mouseup', () => {
+          this.isDragging = false;
+        });
+        
+        this.canvas.addEventListener('mouseleave', () => {
+          this.isDragging = false;
+        });
+      }
+      
+      // 获取鼠标在画布上的位置
+      getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return new Vector2D(e.clientX - rect.left, e.clientY - rect.top);
+      }
+      
+      // 屏幕坐标转世界坐标
+      screenToWorld(screenPos) {
+        return screenPos.subtract(this.offset).multiply(1 / this.scale);
+      }
+      
+      // 世界坐标转屏幕坐标
+      worldToScreen(worldPos) {
+        return worldPos.multiply(this.scale).add(this.offset);
+      }
+      
+      // 清除画布
+      clear() {
+        this.ctx.fillStyle = 'rgba(3, 7, 18, 0.2)'; // 半透明背景，用于轨迹渐变效果
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      
+      // 绘制系统信息
+      drawInfo(system) {
+        if (!this.showInfo) return;
+        
+        const energy = system.calculateTotalEnergy();
+        const angularMomentum = system.calculateAngularMomentum();
+        
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = '14px Inter, sans-serif';
+        
+        const info = [
+          `时间: ${system.time.toFixed(2)}`,
+          `总能量: ${energy.toFixed(4)}`,
+          `角动量: ${angularMomentum.length().toFixed(4)}`,
+          `缩放: ${this.scale.toFixed(0)}%`
+        ];
+        
+        info.forEach((text, index) => {
+          this.ctx.fillText(text, 10, 25 + index * 20);
+        });
+      }
+      
+      // 切换信息显示
+      toggleInfo() {
+        this.showInfo = !this.showInfo;
+      }
+    }
+
+    // ===== 应用程序类 =====
+    class App {
+      constructor() {
+        this.system = new ThreeBodySystem();
+        this.renderer = new Renderer('simulation-canvas');
+        this.isRunning = false;
+        this.animationId = null;
+        
+        // 初始化UI控件
+        this.initControls();
+        
+        // 设置默认场景
+        this.loadScenario('default');
+        
+        // 开始渲染循环
+        this.render();
+      }
+      
+      // 初始化控件
+      initControls() {
+        // 播放/暂停按钮
+        document.getElementById('play-pause-btn').addEventListener('click', () => {
+          this.toggleSimulation();
+        });
+        
+        // 重置按钮
+        document.getElementById('reset-btn').addEventListener('click', () => {
+          this.resetSimulation();
+        });
+        
+        // 导出数据按钮
+        document.getElementById('export-data-btn').addEventListener('click', () => {
+          this.exportData();
+        });
+        
+        // 切换轨迹按钮
+        document.getElementById('toggle-trails-btn').addEventListener('click', () => {
+          toggleTrails();
+        });
+        
+        // 切换信息按钮
+        document.getElementById('toggle-info-btn').addEventListener('click', () => {
+          this.renderer.toggleInfo();
+        });
+        
+        // 场景选择
+        document.getElementById('preset-scenarios').addEventListener('change', (e) => {
+          this.loadScenario(e.target.value);
+        });
+        
+        // 帮助按钮
+        document.getElementById('help-btn').addEventListener('click', () => {
+          document.getElementById('help-modal').classList.remove('hidden');
+        });
+        
+        // 关闭帮助按钮
+        document.getElementById('close-help-btn').addEventListener('click', () => {
+          document.getElementById('help-modal').classList.add('hidden');
+        });
+        
+        // 物理参数滑块
+        document.getElementById('gravity-constant').addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          this.system.G = value;
+          document.getElementById('gravity-value').textContent = value.toFixed(2);
+        });
+        
+        document.getElementById('time-step').addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          this.system.timeStep = value;
+          document.getElementById('time-step-value').textContent = value.toFixed(3);
+        });
+        
+        document.getElementById('softening-factor').addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          this.system.softening = value;
+          document.getElementById('softening-value').textContent = value.toFixed(3);
+        });
+        
+        // 天体选择器
+        document.getElementById('body-selector').addEventListener('change', () => {
+          updateBodyControls();
+        });
+        
+        // 天体参数滑块
+        document.getElementById('body-mass').addEventListener('input', (e) => {
+          updateBodyParameters();
+        });
+        
+        document.getElementById('body-x').addEventListener('input', (e) => {
+          updateBodyParameters();
+        });
+        
+        document.getElementById('body-y').addEventListener('input', (e) => {
+          updateBodyParameters();
+        });
+        
+        document.getElementById('body-vx').addEventListener('input', (e) => {
+          updateBodyParameters();
+        });
+        
+        document.getElementById('body-vy').addEventListener('input', (e) => {
+          updateBodyParameters();
+        });
+        
+        // 显示选项
+        document.getElementById('trail-length').addEventListener('input', (e) => {
+          trailLength = parseInt(e.target.value);
+          document.getElementById('trail-length-value').textContent = trailLength;
+        });
+        
+        document.getElementById('show-velocities').addEventListener('change', (e) => {
+          showVelocities = e.target.checked;
+        });
+        
+        document.getElementById('show-forces').addEventListener('change', (e) => {
+          showForces = e.target.checked;
+        });
+        
+        document.getElementById('show-center-of-mass').addEventListener('change', (e) => {
+          showCenterOfMass = e.target.checked;
+        });
+        
+        // 更新天体控件
+        window.updateBodyControls = () => {
+          const index = parseInt(document.getElementById('body-selector').value);
+          const body = this.system.bodies[index];
+          
+          document.getElementById('body-mass').value = body.mass;
+          document.getElementById('mass-value').textContent = body.mass.toFixed(2);
+          
+          document.getElementById('body-x').value = body.position.x;
+          document.getElementById('x-value').textContent = body.position.x.toFixed(2);
+          
+          document.getElementById('body-y').value = body.position.y;
+          document.getElementById('y-value').textContent = body.position.y.toFixed(2);
+          
+          document.getElementById('body-vx').value = body.velocity.x;
+          document.getElementById('vx-value').textContent = body.velocity.x.toFixed(2);
+          
+          document.getElementById('body-vy').value = body.velocity.y;
+          document.getElementById('vy-value').textContent = body.velocity.y.toFixed(2);
+        };
+        
+        // 更新天体参数
+        window.updateBodyParameters = () => {
+          const index = parseInt(document.getElementById('body-selector').value);
+          const body = this.system.bodies[index];
+          
+          body.mass = parseFloat(document.getElementById('body-mass').value);
+          document.getElementById('mass-value').textContent = body.mass.toFixed(2);
+          
+          body.position.x = parseFloat(document.getElementById('body-x').value);
+          document.getElementById('x-value').textContent = body.position.x.toFixed(2);
+          
+          body.position.y = parseFloat(document.getElementById('body-y').value);
+          document.getElementById('y-value').textContent = body.position.y.toFixed(2);
+          
+          body.velocity.x = parseFloat(document.getElementById('body-vx').value);
+          document.getElementById('vx-value').textContent = body.velocity.x.toFixed(2);
+          
+          body.velocity.y = parseFloat(document.getElementById('body-vy').value);
+          document.getElementById('vy-value').textContent = body.velocity.y.toFixed(2);
+          
+          // 更新天体半径
+          body.radius = Math.pow(body.mass, 1/3) * 10;
+        };
+        
+        // 切换轨迹显示
+        window.toggleTrails = () => {
+          showTrails = !showTrails;
+          if (!showTrails) {
+            // 清除轨迹
+            for (const body of this.system.bodies) {
+              body.trail = [];
+            }
+          }
+        };
+      }
+      
+      // 加载场景
+      loadScenario(scenarioName) {
+        if (presetScenarios[scenarioName]) {
+          presetScenarios[scenarioName].setup(this.system);
+          this.system.reset();
+          updateBodyControls();
+          
+          // 更新UI控件
+          document.getElementById('gravity-constant').value = this.system.G;
+          document.getElementById('gravity-value').textContent = this.system.G.toFixed(2);
+          
+          document.getElementById('time-step').value = this.system.timeStep;
+          document.getElementById('time-step-value').textContent = this.system.timeStep.toFixed(3);
+          
+          document.getElementById('softening-factor').value = this.system.softening;
+          document.getElementById('softening-value').textContent = this.system.softening.toFixed(3);
+        }
+      }
+      
+      // 切换模拟状态
+      toggleSimulation() {
+        this.isRunning = !this.isRunning;
+        
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const pausedIndicator = document.getElementById('paused-indicator');
+        
+        if (this.isRunning) {
+          playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+          pausedIndicator.classList.add('hidden');
+        } else {
+          playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+          pausedIndicator.classList.remove('hidden');
+        }
+      }
+      
+      // 重置模拟
+      resetSimulation() {
+        const scenarioName = document.getElementById('preset-scenarios').value;
+        this.loadScenario(scenarioName);
+      }
+      
+      // 导出数据
+      exportData() {
+        const data = this.system.exportData();
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `three-body-data-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      
+      // 渲染循环
+      render() {
+        // 更新系统状态
+        if (this.isRunning) {
+          this.system.update();
+        }
+        
+        // 渲染
+        this.renderer.clear();
+        this.system.draw(this.renderer.ctx, this.renderer.scale, this.renderer.offset);
+        this.renderer.drawInfo(this.system);
+        
+        // 继续渲染循环
+        this.animationId = requestAnimationFrame(() => this.render());
+      }
+    }
+
+    // 全局变量
+    let showTrails = true;
+    let trailLength = 1000;
+    let showVelocities = false;
+    let showForces = false;
+    let showCenterOfMass = false;
+
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = new App();
+    });
+  </script>
+</body>
+</html>
